@@ -1,0 +1,27 @@
+name: Deploy WordPress
+
+on:
+  push:
+    branches:
+      - main  # Change to your branch name
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 13.201.13.22 >> ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+        run: |
+          rsync -avz --delete . user@13.201.13.22:/var/www/html/wordpress
+          ssh user@13.201.13.22 "sudo systemctl restart nginx"
+
